@@ -79,10 +79,24 @@ int main(){
 		int subchunk_count = 0;
 		printf("new chunk\n");
 		for(int y=0; y<=logSqN/32; y+=1){
-			printf("start subchunk = %d\n", ((x*logSqN+y*32))+((x*logSqN+y*32)%32));
-			printf("end subchunk = %d\n", (x*logSqN+y*32)+32-((x*logSqN+y*32)%32));
-			int first_part = bitString[((x*logSqN+y*32)/32)] << ((x*logSqN+y*32)%32);
-			int second_part = bitString[((x*logSqN+y*32)/32)+1] >> (32-((x*logSqN+y*32)%32));
+
+			int start_bit_pos = 32*((x*logSqN+y*32)/32)+((x*logSqN+y*32)%32);
+			int end_bit_pos = start_bit_pos+32;
+			if (end_bit_pos > (x+1)*logSqN) {
+				end_bit_pos = (x+1)*logSqN;
+			}
+
+			int subchunk_start_index = start_bit_pos/32;
+			int subchunk_end_index = end_bit_pos/32;
+
+			int start = bitString[subchunk_start_index];
+			unsigned int end = bitString[subchunk_end_index];
+
+			int first_part = start << (subchunk_start_index%32);
+			unsigned int second_part = end >> (32-(subchunk_end_index%32));
+			
+			//int first_part = bitString[((x*logSqN+y*32)/32)] << ((x*logSqN+y*32)%32);
+			//int second_part = bitString[((x*logSqN+y*32)/32)+1] >> (32-((x*logSqN+y*32)%32));
 			subchunk_count += __builtin_popcount(first_part);
 			subchunk_count += __builtin_popcount(second_part);
 			subchunks[x][y]=subchunk_count;
