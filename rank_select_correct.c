@@ -26,16 +26,40 @@ int rank(int pos, int vector){
 	return 0;
 }
 
-void print_bits(int *bit_string, int len) {
+void print_bits(int *bit_string, int len, int chunk_size, int subchunk_size) {
+	int bit_count = 0;
+	int sub_bit_count = 0;
 	for (int i = 0; i < len; i++) {
 		for (int j = 31; j >= 0; j--) {
 			printf("%d", (bit_string[i]>>j)&1);
+			bit_count++;
+			sub_bit_count++;
+			if (bit_count == chunk_size) {
+				printf("\n");
+				sub_bit_count = 0;
+				bit_count = 0;
+			}
+			if (sub_bit_count == subchunk_size) {
+				printf("|");
+				sub_bit_count=0;
+			}
+
+
 		}
 	}
 	printf("\n");
 }
 
+void print_int(int x) {
+	for (int j = 31; j >= 0; j--) {
+		printf("%d", (x>>j)&1);
+	}
+	printf("\n");
+}
+
 int main(){
+
+	printf("K: %d, N:%d, logN: %d, logSqn: %d, loglogN: %d N/32:%d, \n",K, N, logN, logSqN, loglogN, N/32);
 	int bitString [N/32] = {0};
 	bitString[0] = (1<<20)+1;
 	bitString[2] = (1<<20)+1;
@@ -87,25 +111,33 @@ int main(){
 			}
 
 			int subchunk_start_index = start_bit_pos/32;
-			int subchunk_end_index = end_bit_pos/32;
+			int subchunk_end_index = (end_bit_pos-1)/32;
+			printf("subchunk start = %d, subchunk end = %d\n",start_bit_pos, end_bit_pos);
 
 			int start = bitString[subchunk_start_index];
 			unsigned int end = bitString[subchunk_end_index];
 
-			int first_part = start << (subchunk_start_index%32);
-			unsigned int second_part = end >> (32-(subchunk_end_index%32));
-			
+			int first_part = start << (start_bit_pos%32);
+			unsigned int second_part = end >> (32-(end_bit_pos%32));
+			if (end_bit_pos %32 ==0) {
+				second_part = 0;
+			}
+			print_int(first_part);
+			print_int(second_part);			
 			//int first_part = bitString[((x*logSqN+y*32)/32)] << ((x*logSqN+y*32)%32);
 			//int second_part = bitString[((x*logSqN+y*32)/32)+1] >> (32-((x*logSqN+y*32)%32));
-			subchunk_count += __builtin_popcount(first_part);
+			if (end_bit_pos - start_bit_pos >=32) {
+				subchunk_count += __builtin_popcount(first_part);
+			}
+			
 			subchunk_count += __builtin_popcount(second_part);
 			subchunks[x][y]=subchunk_count;
 		}
 	}
-	print_bits(bitString, N/32);
+	print_bits(bitString, N/32, chunk_size, subchunk_size);
 	for(int x=0; x<(N/logSqN)+1; x++){
 		printf("chunk size = %d\n", chunks[x]);
-		for(int y=0; y<logSqN/32; y+=1){
+		for(int y=0; y<=logSqN/32; y+=1){
 			printf("subchunk size = %d\n",subchunks[x][y]);
 		}
 	}
